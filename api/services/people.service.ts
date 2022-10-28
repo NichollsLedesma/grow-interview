@@ -1,28 +1,16 @@
-import { IApiResponse, IPerson, IPersonFromApi, IQueryPagination } from "../interfaces";
+import { IPerson } from "../interfaces";
 import { sortingBy } from "../utils";
-import { fetchPeople } from "./third-party";
+import { readPeople } from "./../repositories";
 
-export const getAllPeople = async (pagination: IQueryPagination, sortBy?: string): Promise<IApiResponse<IPerson>> => {
-    const dataFetched = await fetchPeople<IPersonFromApi>(pagination);
-    const data: IPerson[] = clean(dataFetched.results)
+export const getAllPeople = (sortBy?: string): IPerson[] => {
+    const people = readPeople();
     if (sortBy) {
-        sortingBy(data, sortBy)
+        sortingBy(people, sortBy)
     }
 
-    return {
-        ...dataFetched,
-        results: data
-    }
+    return people;
 }
 
-const clean = (data: IPersonFromApi[]): IPerson[] => {
-    return data.map(item => {
-        return {
-            ...item,
-            height: Number(item.height),
-            mass: Number(item.mass),
-            created: new Date(item.created),
-            edited: new Date(item.edited),
-        }
-    })
-}
+
+
+

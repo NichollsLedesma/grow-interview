@@ -1,28 +1,21 @@
 import Express, { Request, Response } from "express";
 import { config } from './config';
 import { getAllPeople, getAllPlanets } from "./services";
+import { loadData } from "./services/third-party";
 
 const app = Express();
 
+loadData()
 
-app.get('/people', async (req: Request, res: Response): Promise<void> => {
-    const { sortBy, page = 1, size = 10 } = req.query
-    const paginationParams = {
-        page: Number(page),
-        size: Number(size),
-    };
-    const data = await getAllPeople(paginationParams, sortBy as string)
+app.get('/people', (req: Request, res: Response): void => {
+    const { sortBy } = req.query
+    const data = getAllPeople(sortBy as string)
 
     res.json(data);
 });
 
-app.get('/planets', async (req: Request, res: Response): Promise<void> => {
-    const { page = 1, size = 10 } = req.query
-    const paginationParams = {
-        page: Number(page),
-        size: Number(size),
-    }
-    const data = await getAllPlanets(paginationParams)
+app.get('/planets',  (req: Request, res: Response): void => {
+    const data =  getAllPlanets()
 
     res.json(data);
 });

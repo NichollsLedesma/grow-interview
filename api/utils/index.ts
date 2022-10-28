@@ -1,5 +1,7 @@
+import { writeFileSync, readFileSync } from "fs";
+import { join } from "path";
 
-export const sortingBy = (data: any[], by: string, isAsc: boolean = true):void => {
+export const sortingBy = (data: any[], by: string, isAsc: boolean = true): void => {
     let aLargeThanB = 1, bLargeThanA = -1;
     if (!isAsc) {
         aLargeThanB = -1
@@ -10,4 +12,25 @@ export const sortingBy = (data: any[], by: string, isAsc: boolean = true):void =
         if (a[by] < b[by]) return bLargeThanA;
         return 0;
     })
+}
+
+export const writeFile = <T>(filename: string, data: T[]) => {
+    const fullPath = join(__dirname, `../resources/${filename}`);
+    try {
+        writeFileSync(fullPath, JSON.stringify(data));
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+export const readFile = <T>(filename: string): T[] | undefined => {
+    const fullPath = join(__dirname, `../resources/${filename}`);
+    try {
+        const dataString = readFileSync(fullPath, {
+            encoding: 'utf-8'
+        });
+        return JSON.parse(dataString)
+    } catch (err) {
+        console.log(err);
+    }
 }
