@@ -5,7 +5,9 @@ import { loadData } from "./services/third-party";
 
 const app = Express();
 
-loadData()
+(async () => {
+    await loadData();
+})()
 
 app.get('/people', (req: Request, res: Response): void => {
     const { sortBy } = req.query
@@ -14,8 +16,8 @@ app.get('/people', (req: Request, res: Response): void => {
     res.json(data);
 });
 
-app.get('/planets',  (req: Request, res: Response): void => {
-    const data =  getAllPlanets()
+app.get('/planets', (req: Request, res: Response): void => {
+    const data = getAllPlanets()
 
     res.json(data);
 });

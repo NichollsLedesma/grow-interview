@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IApiResponse, IPerson, IPersonFromApi, IPlanetFromApi, IQueryPagination } from "../../interfaces";
-import { writeFile } from "../../utils";
+import { findObject, writeFile } from "../../utils";
 
 const fetching = <T>(source: string, queryParams: Record<string, any> = {}): Promise<IApiResponse<T>> => {
     const BASE_API_URL = 'https://swapi.dev/api';
@@ -23,15 +23,35 @@ export const fetchPlanets = async <T>(params: IQueryPagination): Promise<IApiRes
 
 
 export const loadData = async () => {
-    await Promise.all([
-        loadDataPeople(),
-        loadDataPlanets()
-    ]).then(_ => {
-        console.log(`files updates.`)
+    const people = await getAllDataPeople()
+    const planets = await loadDataPlanets()
+
+    const peopleCleaned = cleanPeople(people);
+    const planetsCleaned = cleanPlanets(planets, people);
+
+    writeFile<IPerson>('people.json', peopleCleaned)
+    writeFile<IPlanetFromApi>('planets.json', planetsCleaned);
+
+    console.log('data loaded.')
+}
+
+const cleanPlanets = (planets: IPlanetFromApi[], people: IPersonFromApi[]): IPlanetFromApi[] => {
+    const getName = (key: string, value: string): string => {
+        const person = findObject<IPersonFromApi>(people, key, value)
+        return (person) ? person.name : 'unknown';
+    }
+    return planets.map(planet => {
+        const names = planet.residents.map(residentUrl => getName('url', residentUrl))
+
+        return {
+            ...planet,
+            residents: names
+        }
     })
 }
 
-const loadDataPlanets = async () => {
+
+const loadDataPlanets = async (): Promise<IPlanetFromApi[]> => {
     const size = 10;
     let currentPage = 1
     const { count, results: firstResult } = await fetchPlanets<IPlanetFromApi>({ page: currentPage, size });
@@ -46,10 +66,11 @@ const loadDataPlanets = async () => {
     const allPlanets: IPlanetFromApi[] = await Promise.all(promises).then((data: IApiResponse<IPlanetFromApi>[]) => {
         return data.flatMap(response => response.results)
     });
-    writeFile<IPlanetFromApi>('planets.json', [...firstResult, ...allPlanets])
+
+    return [...firstResult, ...allPlanets]
 }
 
-const loadDataPeople = async () => {
+const getAllDataPeople = async (): Promise<IPersonFromApi[]> => {
     const size = 10;
     let currentPage = 1
     const { count, results: firstResult } = await fetchPeople<IPersonFromApi>({ page: currentPage, size });
@@ -66,9 +87,12 @@ const loadDataPeople = async () => {
         return data.flatMap(response => response.results)
     });
 
-    const dataCleaned = cleanPeople([...firstResult, ...allPeople]);
-    writeFile<IPerson>('people.json', dataCleaned)
+
+
+    return [...firstResult, ...allPeople]
 }
+
+
 
 
 const cleanPeople = (data: IPersonFromApi[]): IPerson[] => {

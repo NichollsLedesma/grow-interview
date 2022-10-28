@@ -34,3 +34,14 @@ export const readFile = <T>(filename: string): T[] | undefined => {
         console.log(err);
     }
 }
+
+export const findObject = <T>(list: T[], key: string, value: string): T | null => {
+    const item = list.find(it => {
+        const aux = it as Record<string, string>
+        return aux[key] === value
+    })
+
+    if (!item) return null;
+
+    return item as T
+}
